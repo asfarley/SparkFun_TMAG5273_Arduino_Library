@@ -2508,15 +2508,20 @@ int8_t TMAG5273::getError()
 /// @return T-Channel data conversion results
 float TMAG5273::getTemp()
 {
-    // Variable to store full temperature value
-    int16_t temp = 0;
-    uint8_t databuffer[2];
+
     // Read in the MSB and LSB registers
-    readRegisters(TMAG5273_REG_T_MSB_RESULT, databuffer, 2);
-    // Combines the two in one register where the MSB is shifted to the correct location
-    temp = (databuffer[0] << 8) | (databuffer[1]);
-    // Formula for correct output value
-    float tempOut = TMAG5273_TSENSE_T0 + (((float)temp - TMAG5273_TADC_T0) / (TMAG5273_TADC_RES));
+    uint8_t databuffer_MSB = readRegister(TMAG5273_REG_T_MSB_RESULT);
+	uint8_t databuffer_LSB = readRegister(TMAG5273_REG_T_LSB_RESULT);
+	
+	uint32_t tPreCast = combine(databuffer_MSB, databuffer_LSB);
+
+    int32_t tData = tPreCast;
+    if(tData >= 32769)
+    {
+      tData -= 65536;
+    }
+	
+    float tempOut = TMAG5273_TSENSE_T0 + (((float)tData - TMAG5273_TADC_T0) / (TMAG5273_TADC_RES));
 
     return tempOut;
 }
@@ -2527,13 +2532,17 @@ float TMAG5273::getTemp()
 /// @return X-Channel data conversion results
 float TMAG5273::getXData()
 {
-    int8_t xLSB = readRegister(TMAG5273_REG_X_LSB_RESULT);
-    int8_t xMSB = readRegister(TMAG5273_REG_X_MSB_RESULT);
+    uint8_t xLSB = readRegister(TMAG5273_REG_X_LSB_RESULT);
+    uint8_t xMSB = readRegister(TMAG5273_REG_X_MSB_RESULT);
 
     // Variable to store full X data
-    int16_t xData = 0;
-    // Combines the two in one register where the MSB is shifted to the correct location
-    xData = xLSB + (xMSB << 8);
+    uint32_t xPreCast = combine(xMSB, xLSB);
+
+    int32_t xData = xPreCast;
+    if(xData >= 32769)
+    {
+      xData -= 65536;
+    }
 
     // Reads to see if the range is set to 40mT or 80mT
     uint8_t rangeValXY = getXYAxisRange();
@@ -2560,16 +2569,20 @@ float TMAG5273::getXData()
 /// @return Y-Channel data conversion results
 float TMAG5273::getYData()
 {
-    int8_t yLSB = 0;
-    int8_t yMSB = 0;
+    uint8_t yLSB = 0;
+    uint8_t yMSB = 0;
 
     yLSB = readRegister(TMAG5273_REG_Y_LSB_RESULT);
     yMSB = readRegister(TMAG5273_REG_Y_MSB_RESULT);
+	
+	uint32_t yPreCast = combine(yMSB, yLSB);
 
-    // Variable to store full Y data
-    int16_t yData = 0;
-    // Combines the two in one register where the MSB is shifted to the correct location
-    yData = yLSB + (yMSB << 8);
+    int32_t yData = yPreCast;
+    if(yData >= 32769)
+    {
+      yData -= 65536;
+    }
+
 
     // Reads to see if the range is set to 40mT or 80mT
     uint8_t rangeValXY = getXYAxisRange();
@@ -2596,16 +2609,19 @@ float TMAG5273::getYData()
 /// @return Z-Channel data conversion results.
 float TMAG5273::getZData()
 {
-    int8_t zLSB = 0;
-    int8_t zMSB = 0;
+    uint8_t zLSB = 0;
+    uint8_t zMSB = 0;
 
     zLSB = readRegister(TMAG5273_REG_Z_LSB_RESULT);
     zMSB = readRegister(TMAG5273_REG_Z_MSB_RESULT);
 
-    // Variable to store full X data
-    int16_t zData = 0;
-    // Combines the two in one register where the MSB is shifted to the correct location
-    zData = zLSB + (zMSB << 8); 
+	uint32_t zPreCast = combine(zMSB, zLSB);
+
+    int32_t zData = zPreCast;
+    if(zData >= 32769)
+    {
+      zData -= 65536;
+    }
 
     // Reads to see if the range is set to 40mT or 80mT
     uint8_t rangeValZ = getZAxisRange();
@@ -2679,4 +2695,9 @@ float TMAG5273::getMagnitudeResult()
     magReg = readRegister(TMAG5273_REG_MAGNITUDE_RESULT);
 
     return magReg;
+}
+
+uint16_t TMAG5273::combine(uint8_t a, uint8_t b)
+{
+    return static_cast<unsigned>(a) << 8 | static_cast<unsigned>(b);
 }

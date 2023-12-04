@@ -135,6 +135,7 @@ class TMAG5273
     int8_t readRegisters(uint8_t regAddress, uint8_t *dataBuffer, uint8_t numBytes);
     uint8_t readRegister(uint8_t regAddress);
     uint8_t writeRegister(uint8_t regAddress, uint8_t data);
+	uint16_t combine(uint8_t a, uint8_t b);
     bool ping(uint8_t i2c_address); // Checks for device presence
 };
 
