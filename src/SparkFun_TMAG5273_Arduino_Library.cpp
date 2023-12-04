@@ -175,9 +175,9 @@ int8_t TMAG5273::writeRegisters(uint8_t regAddress, uint8_t *dataBuffer, uint8_t
 /// @return Value of the register chosen to be read from
 uint8_t TMAG5273::readRegister(uint8_t regAddress)
 {
-    uint8_t regVal = 0;
-    readRegisters(regAddress, &regVal, 2);
-    return regVal;
+    uint8_t regVal[3] = {0};
+    readRegisters(regAddress, regVal, 3);
+    return regVal[0];
 }
 
 /// @brief Reads a register region from a device.
